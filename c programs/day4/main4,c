@@ -1,0 +1,21 @@
+#include<stdio.h>
+int main()
+{
+    int n1,n2;
+    printf("En ter the first number :");
+    scanf("%d",&n1);
+    printf("Enter the second number :");
+    scanf("%d",&n2);
+    int *p=&n1,*q=&n2;
+    if(*p>*q)
+    {
+        printf("The biggest number is %d",*p);
+        printf("The Address is :%p",p);
+    }
+    else
+    {
+        printf("The biggest number is %d",*q);
+        printf(" The Address is :%p",q);
+    }
+    return 0;
+}
