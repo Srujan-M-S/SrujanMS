@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech Treasure Hunt - Full Round</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* --- === GLOBAL & GAME MANAGER STYLES === --- */
+      :root {
+        /* Level 1-2 Theme */
+        --bg: #050505;
+        --panel: #0d0d0d;
+        --neon: #00ff88;
+        --accent: #00b35c;
+        --txt: #b3ffc7;
+
+        /* Level 3 Theme (from user's code) */
+        --bg-dark: #1a1a2e;
+        --bg-light: #2c2a4a;
+        --accent-blue: #007bff;
+        --accent-green: #28a745;
+        --accent-red: #dc3545;
+        --text-light: #e0e0e0;
+        --text-dark: #333;
+        --card-back-bg: #f9f9f9;
+        --card-front-bg: #3f3e6a;
+        --border-glow: #66ccff;
+        --solution-bg: #2b3a53;
+        --solution-border: #4d7092;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Global body style for Levels 1 & 2 */
+      body {
+        min-height: 100vh;
+        background-color: var(--bg);
+        font-family: 'Roboto Mono', monospace, 'Courier New';
+        color: var(--txt);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background-image: radial-gradient(
+          circle at center,
+          rgba(0, 255, 136, 0.08) 0,
+          transparent 60%
+        );
+        animation: pulse 5s infinite alternate;
+      }
+
+      @keyframes pulse {
+        from {
+          background-color: #050505;
+        }
+        to {
+          background-color: #0a0a0a;
+        }
+      }
+
+      /* Level 3 active state - overrides global body style */
+      body.level-3-active {
+        font-family: 'Roboto Mono', monospace;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        color: var(--text-light);
+        background: linear-gradient(rgba(26, 26, 46, 0.9), rgba(26, 26, 46, 0.9)),
+          url('https://images.unsplash.com/photo-1510511459019-5da409437659?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')
+            no-repeat center center fixed;
+        background-size: cover;
+        animation: backgroundPulse-L3 15s infinite alternate;
+      }
+
+      @keyframes backgroundPulse-L3 {
+        0% {
+          background-position: 0% 0%;
+        }
+        100% {
+          background-position: 100% 100%;
+        }
+      }
+
+      /* Universal HUD */
+      .game-hud {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: min(900px, 96%);
+        background: rgba(10, 20, 10, 0.9);
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        font-family: 'Orbitron', sans-serif;
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        /* Ensure HUD is visible on top of L3 background */
+        position: relative;
+        z-index: 10;
+      }
+
+      /* HUD on Level 3 needs style adjustments */
+      body.level-3-active .game-hud {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border-glow);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      }
+      body.level-3-active .game-hud .hud-stat {
+        color: var(--text-light);
+      }
+      body.level-3-active .game-hud .hud-stat span {
+        color: var(--border-glow);
+      }
+      body.level-3-active .game-hud #hud-time {
+        color: var(--accent-red) !important;
+      }
+
+      .hud-stat {
+        font-size: 1.1rem;
+      }
+      .hud-stat span {
+        color: var(--neon);
+        font-weight: 700;
+        min-width: 60px;
+        display: inline-block;
+        text-align: right;
+      }
+      #hud-time {
+        color: var(--accent-red) !important;
+        font-weight: bold;
+      }
+      #hud-status {
+        color: var(--txt);
+        font-size: 1rem;
+        font-family: 'Roboto Mono', monospace;
+        min-width: 150px;
+        text-align: right;
+      }
+      body.level-3-active .game-hud #hud-status {
+        color: var(--text-light);
+      }
+
+      /* Level Containers */
+      .level-container {
+        display: none; /* Hidden by default */
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Start Screens */
+      .start-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 50vh;
+        width: min(700px, 90%);
+        padding: 40px;
+        background: rgba(10, 20, 10, 0.8);
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        text-align: center;
+        z-index: 10;
+        position: relative;
+      }
+
+      .start-screen h1 {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--neon);
+        text-shadow: 0 0 10px var(--neon);
+        margin-bottom: 15px;
+      }
+
+      .start-screen p {
+        font-size: 1.1rem;
+        color: var(--txt);
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+
+      .start-screen .rules {
+        text-align: left;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 3px solid var(--neon);
+        margin-bottom: 25px;
+      }
+      .start-screen .rules li {
+        margin-bottom: 8px;
+        list-style-position: inside;
+      }
+
+      .start-screen .level-complete-message {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--accent-green);
+        margin-bottom: 25px;
+      }
+
+      .start-screen button {
+        padding: 12px 25px;
+        border-radius: 6px;
+        border: 1px solid var(--accent);
+        cursor: pointer;
+        font-weight: bold;
+        background: transparent;
+        color: var(--neon);
+        text-shadow: 0 0 8px var(--neon);
+        transition: 0.2s;
+        font-size: 1.2rem;
+        font-family: 'Orbitron', sans-serif;
+      }
+      .start-screen button:hover {
+        background: var(--accent);
+        color: #000;
+        box-shadow: 0 0 12px var(--neon);
+      }
+
+      /* Final/Disqualified Screen Specifics */
+      #final-screen h1.disqualified-title {
+        color: var(--accent-red);
+        text-shadow: 0 0 10px var(--accent-red);
+      }
+
+      /* --- === LEVEL 1 & 2 STYLES === --- */
+      #level-1-2-container header {
+        text-align: center;
+        margin-bottom: 15px;
+        text-shadow: 0 0 10px var(--neon);
+      }
+      #level-1-2-container h1 {
+        font-size: 2rem;
+        color: var(--neon);
+        margin-bottom: 6px;
+        letter-spacing: 2px;
+        font-family: 'Orbitron', sans-serif;
+      }
+      #level-1-2-container .subtitle {
+        font-weight: bold;
+        color: var(--accent);
+      }
+
+      #level-1-2-container .game {
+        width: min(900px, 96%);
+        background: rgba(10, 20, 10, 0.8);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2),
+          inset 0 0 10px rgba(0, 255, 136, 0.1);
+        border: 1px solid var(--accent);
+      }
+
+      #level-1-2-container .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      #level-1-2-container button {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--accent);
+        cursor: pointer;
+        font-weight: bold;
+        background: transparent;
+        color: var(--neon);
+        text-shadow: 0 0 8px var(--neon);
+        transition: 0.2s;
+        font-family: 'Courier New', monospace;
+      }
+      #level-1-2-container button:hover {
+        background: var(--accent);
+        color: #000;
+        box-shadow: 0 0 12px var(--neon);
+      }
+
+      #level-1-2-container .moves {
+        display: none;
+      }
+
+      #level-1-2-container .lines {
+        list-style: none;
+        padding: 12px;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 8px;
+        border: 1px dashed var(--accent);
+      }
+
+      #level-1-2-container .line {
+        background: rgba(0, 255, 136, 0.05);
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 3px solid var(--accent);
+        font-family: monospace;
+        font-weight: bold;
+        cursor: grab;
+        user-select: none;
+        color: var(--txt);
+        transition: all 0.15s ease;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      #level-1-2-container .line:hover {
+        background: rgba(0, 255, 136, 0.1);
+      }
+
+      #level-1-2-container .line.dragging {
+        opacity: 0.4;
+        transform: scale(0.97);
+      }
+
+      #level-1-2-container .status {
+        margin-top: 10px;
+        font-weight: 900;
+        color: var(--accent);
+        text-align: center;
+        letter-spacing: 1px;
+      }
+
+      #level-1-2-container .cinema {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 100;
+      }
+      #level-1-2-container .cinema.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #level-1-2-container .speech {
+        background: rgba(0, 20, 10, 0.9);
+        border: 2px solid var(--accent);
+        border-radius: 12px;
+        padding: 25px;
+        width: 500px;
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.25);
+        text-align: center;
+        animation: popupGlow 1.5s infinite alternate;
+      }
+
+      @keyframes popupGlow {
+        from {
+          box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        to {
+          box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
+        }
+      }
+
+      #level-1-2-container .speech h2 {
+        color: var(--neon);
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+      }
+
+      #level-1-2-container .speech p {
+        margin-top: 8px;
+        font-weight: 600;
+        color: var(--txt);
+        text-shadow: 0 0 5px var(--accent);
+      }
+
+      #level-1-2-container .speech .actions {
+        margin-top: 14px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      #level-1-2-container select.fix-select {
+        background: transparent;
+        border: 1px solid rgba(179, 255, 199, 0.2);
+        color: var(--txt);
+        font-family: monospace;
+        font-weight: bold;
+        border-radius: 6px;
+        padding: 6px;
+        min-width: 220px;
+      }
+
+      #level-1-2-container .bug-text {
+        white-space: pre;
+        opacity: 0.95;
+        font-weight: 700;
+      }
+
+      /* --- === LEVEL 3 STYLES (SCOPED) === --- */
+      /* Scoping the user's provided CSS to only apply within #level-3-container */
+
+      #level-3-container .game-wrapper {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        margin: 20px;
+        max-width: fit-content;
+      }
+
+      #level-3-container h1 {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--border-glow);
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+        margin-bottom: 30px;
+      }
+
+      #level-3-container #game-board {
+        display: grid;
+        grid-template-columns: repeat(6, 110px);
+        grid-gap: 15px;
+        margin-top: 20px;
+        perspective: 1000px;
+      }
+
+      #level-3-container .card {
+        width: 110px;
+        height: 110px;
+        background-color: transparent;
+        cursor: pointer;
+        border-radius: 10px;
+        position: relative;
+      }
+
+      #level-3-container .card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1),
+          box-shadow 0.3s ease;
+        transform-style: preserve-3d;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+      }
+
+      #level-3-container .card:not(.flipped):not(.matched) .card-inner:hover {
+        box-shadow: 0 0 20px var(--border-glow);
+      }
+
+      #level-3-container .card.flipped .card-inner {
+        transform: rotateY(180deg);
+        box-shadow: 0 4px 25px rgba(0, 255, 255, 0.5);
+      }
+
+      #level-3-container .card.matched {
+        pointer-events: none;
+        animation: matchedPulse-L3 1s forwards;
+      }
+
+      @keyframes matchedPulse-L3 {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+          box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        100% {
+          opacity: 0.3;
+          transform: scale(0.95);
+          box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+      }
+
+      #level-3-container .card-front,
+      #level-3-container .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 2px solid;
+        transition: border-color 0.3s ease;
+      }
+
+      #level-3-container .card-front {
+        background-color: var(--card-front-bg);
+        color: var(--text-light);
+        font-size: 2.5rem;
+        font-weight: bold;
+        border-color: #55547a;
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+        background-image: radial-gradient(
+            circle at center,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 70%
+          ),
+          linear-gradient(45deg, #4a4878, #3a3862);
+      }
+      #level-3-container .card-front:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: var(--border-glow);
+        box-shadow: 0 0 15px var(--border-glow),
+          inset 0 0 5px rgba(255, 255, 255, 0.8);
+        z-index: 2;
+        opacity: 0.6;
+      }
+      /* Added the '?' from your original screenshot's logic */
+      #level-3-container .card-front:after {
+        content: '?';
+        z-index: 3;
+        opacity: 1;
+      }
+
+      #level-3-container .card-back {
+        background-color: var(--card-back-bg);
+        color: var(--text-dark);
+        transform: rotateY(180deg);
+        font-size: 1rem;
+        font-weight: 700;
+        border-color: var(--border-glow);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+      }
+
+      #level-3-container #solution-box {
+        width: 80%;
+        max-width: 700px;
+        margin: 30px auto;
+        padding: 20px;
+        background-color: var(--solution-bg);
+        border: 2px solid var(--solution-border);
+        border-radius: 12px;
+        text-align: left;
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.4s ease-in-out;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+      }
+
+      #level-3-container #solution-box.visible {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      #level-3-container #solution-box h3 {
+        margin-top: 0;
+        color: var(--border-glow);
+        font-family: 'Orbitron', sans-serif;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+      }
+
+      #level-3-container #solution-box p {
+        color: var(--text-light);
+        line-height: 1.6;
+      }
+
+      #level-3-container #reset-btn {
+        margin-top: 25px;
+        padding: 12px 25px;
+        font-size: 1.1rem;
+        color: var(--text-light);
+        background-color: var(--accent-green);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease,
+          box-shadow 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 128, 0, 0.4);
+        font-family: 'Roboto Mono', monospace;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      #level-3-container #reset-btn:hover {
+        background-color: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(0, 128, 0, 0.6);
+      }
+
+      #level-3-container #reset-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 10px rgba(0, 128, 0, 0.3);
+      }
+
+      /* Hide the reset button as it's not part of the game flow */
+      #level-3-container #reset-btn {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-hud">
+      <div class="hud-stat">
+        Level: <span id="hud-level">1</span>
+      </div>
+      <div class="hud-stat">
+        Total Score: <span id="hud-score">0</span>
+      </div>
+      <div class="hud-stat">
+        Moves: <span id="hud-moves">0</span>
+      </div>
+      <div class="hud-stat">
+        Time: <span id="hud-time">05:00</span>
+      </div>
+      <div class="hud-stat">
+        Status: <span id="hud-status"></span>
+      </div>
+    </div>
+
+    <div id="start-level-1" class="start-screen">
+      <h1>Level 1: Code Rearrange</h1>
+      <p>
+        The first system is online, but the boot sequence is scrambled! Rearrange
+        the lines of code into the correct order to proceed.
+      </p>
+      <ul class="rules">
+        <li>You start with 100 points.</li>
+        <li>Drag and drop the code lines to reorder them.</li>
+        <li>You have <strong>20 moves</strong>. Every extra move costs 5 points.</li>
+        <li>
+          After <strong>03:00</strong>, you will lose <strong>5 points every 10
+            seconds</strong
+          >.
+        </li>
+        <li>
+          You will be <strong>disqualified</strong> if your level score hits
+          <strong>35 points or below</strong>.
+        </li>
+      </ul>
+      <button id="start-level-1-btn">[ BEGIN LEVEL 1 ]</button>
+    </div>
+
+    <div id="start-level-2" class="start-screen" style="display: none">
+      <h1 class="level-complete-message" id="level-1-complete-msg"></h1>
+      <h1>Level 2: Bug Squasher</h1>
+      <p>
+        Great! The next system is running, but it's full of syntax errors. Find
+        the correct code from the dropdowns to fix the program.
+      </p>
+      <ul class="rules">
+        <li>You get <strong>+100 points</strong> for starting this level.</li>
+        <li>Select the correct line of code from each dropdown.</li>
+        <li>You have <strong>20 moves</strong>. Every extra move costs 5 points.</li>
+        <li>
+          At <strong>02:00</strong>, you will lose <strong>5 points every 10
+            seconds</strong
+          >.
+        </li>
+        <li>
+          You will be <strong>disqualified</strong> if your level score hits
+          <strong>35 points or below</strong>.
+        </li>
+      </ul>
+      <button id="start-level-2-btn">[ BEGIN LEVEL 2 ]</button>
+    </div>
+
+    <div id="start-level-3" class="start-screen" style="display: none">
+      <h1 class="level-complete-message" id="level-2-complete-msg"></h1>
+      <h1>Level 3: Memory Matrix</h1>
+      <p>
+        Final challenge! The IoT data core is fragmented. Match the pairs of
+        tech terms to unlock their definitions and restore the database.
+      </p>
+      <ul class="rules">
+        <li>You get <strong>+100 points</strong> for starting this level.</li>
+        <li>Find all 15 matching pairs.</li>
+        <li><strong>No move limit!</strong> Only the timer counts.</li>
+        <li>
+          At <strong>02:00</strong>, you will lose <strong>5 points every 10
+            seconds</strong
+          >.
+        </li>
+        <li>
+          You will be <strong>disqualified</strong> if your level score hits
+          <strong>35 points or below</strong>.
+        </li>
+      </ul>
+      <button id="start-level-3-btn">[ BEGIN LEVEL 3 ]</button>
+    </div>
+
+    <div id="final-screen" class="start-screen" style="display: none">
+      <h1 class="level-complete-message" id="final-title">
+        All Levels Complete!
+      </h1>
+      <h1>
+        Final Score:
+        <span id="final-score" style="color: var(--neon)">0</span>
+      </h1>
+      <p id="final-message">
+        Congratulations! You've debugged, rearranged, and restored all the
+        systems. The Tech Treasure Hunt is a success!
+      </p>
+      <p id="level-times"></p>
+    </div>
+
+    <div id="level-1-2-container" class="level-container">
+      <header>
+        <h1 id="l12-title">QUEEN'S CODE // HACKER MODE</h1>
+        <div class="subtitle" id="l12-subtitle">Level 1 — Puzzle 1</div>
+      </header>
+      <div class="game" id="l12-game">
+        <div class="controls">
+          <button id="l12-shuffleBtn">[ SHUFFLE ]</button>
+          <button id="l12-checkBtn">[ CHECK CODE ]</button>
+          <div class="moves">Moves: <span id="l12-moves">0</span></div>
+        </div>
+        <ul id="l12-lines" class="lines"></ul>
+        <div id="l12-status" class="status"></div>
+      </div>
+      <div class="cinema" id="l12-cinema">
+        <div class="speech">
+          <h2 id="l12-speechTitle">💻 SYSTEM MESSAGE</h2>
+          <p id="l12-speechText">Boot sequence initiated...</p>
+          <div class="actions">
+            <button id="l12-actionPrimary">[ NEXT ]</button>
+            <button id="l12-actionSecondary">[ CLOSE ]</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="level-3-container" class="level-container">
+      <div class="game-wrapper">
+        <h1>IoT Tech Treasure Hunt</h1>
+        <div id="game-board"></div>
+
+        <div id="solution-box">
+          <h3 id="solution-topic">Topic</h3>
+          <p id="solution-text">
+            Solution description appears here when you find a match.
+          </p>
+        </div>
+
+        <button id="reset-btn">Reset Grid</button>
+      </div>
+    </div>
+
+    <script>
+      /*
+      ======================================================================
+      === █▀▄▀█ ▄▀█ █▀▀ █▀▀ █▀▄▀█ ▄▀█ █▄▀ █▀▀ █▀█ ===
+      === █ ▀ █ █▀█ █▄▄ █▀▀ █ ▀ █ █▀█ █▄▀ █▄▄ █▀▄ ===
+      === ▀   ▀ ▀ ▀ ▀▀▀ ▀▀▀ ▀   ▀ ▀ ▀ ▀ ▀ ▀▀▀ ▀ ▀ ===
+      ======================================================================
+      */
+
+      const GameManager = {
+        // State
+        currentLevel: 1,
+        totalScore: 0,
+        levelStartScore: 0, // Score at the beginning of the current level
+        levelMoves: 0,
+        levelSeconds: 300,
+        levelTimer: null,
+        gameFailed: false,
+        levelTimes: [], // Array to store time taken for each level
+        levelStartTime: null, // Timestamp when level starts
+        lastLevelTime: 0, // Time taken for the last completed level
+
+        // Config
+        LEVEL_TIME: 300, // 5 minutes
+        LEVEL_SCORE_BONUS: 100,
+        MIN_SCORE_TO_PASS: 35, // <-- MODIFIED (Disqualified if score is <= 35)
+        TIME_PENALTY_THRESHOLD: 180, // 3 minutes (180s)
+        MOVE_LIMIT_L1: 20,
+        MOVE_LIMIT_L2: 20,
+        PENALTY_TIME: -5, // <-- MODIFIED
+        PENALTY_MOVE: -5,
+        PENALTY_WRONG: -5,
+        REWARD_MATCH: 10,
+
+        // DOM Elements
+        hud: {
+          level: document.getElementById('hud-level'),
+          score: document.getElementById('hud-score'),
+          moves: document.getElementById('hud-moves'),
+          time: document.getElementById('hud-time'),
+          status: document.getElementById('hud-status'),
+          main: document.querySelector('.game-hud'),
+        },
+        screens: {
+          start1: document.getElementById('start-level-1'),
+          start2: document.getElementById('start-level-2'),
+          start3: document.getElementById('start-level-3'),
+          final: document.getElementById('final-screen'),
+        },
+        containers: {
+          l12: document.getElementById('level-1-2-container'),
+          l3: document.getElementById('level-3-container'),
+        },
+        buttons: {
+          start1: document.getElementById('start-level-1-btn'),
+          start2: document.getElementById('start-level-2-btn'),
+          start3: document.getElementById('start-level-3-btn'),
+          restart: document.getElementById('restart-game-btn'),
+        },
+        msgs: {
+          l1Complete: document.getElementById('level-1-complete-msg'),
+          l2Complete: document.getElementById('level-2-complete-msg'),
+          finalTitle: document.getElementById('final-title'),
+          finalMessage: document.getElementById('final-message'),
+          finalScore: document.getElementById('final-score'),
+        },
+
+        // --- Core Methods ---
+
+        init() {
+          this.buttons.start1.onclick = () => this.startLevel(1);
+          this.buttons.start2.onclick = () => this.startLevel(2);
+          this.buttons.start3.onclick = () => this.startLevel(3);
+          this.buttons.restart.onclick = () => window.location.reload();
+
+          // Add cheat key: Shift+N to pass level
+          document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key === 'N') {
+              this.completeLevel();
+            }
+          });
+
+          this.hud.main.style.display = 'none';
+          this.totalScore = 0;
+          this.levelStartScore = 0;
+        },
+
+        startLevel(levelNum) {
+          this.currentLevel = levelNum;
+          this.levelStartScore = this.totalScore; // Store score *before* bonus
+          this.totalScore += this.LEVEL_SCORE_BONUS; // Add bonus for starting
+          this.levelMoves = 0;
+          this.levelSeconds = this.LEVEL_TIME;
+          this.gameFailed = false;
+          this.levelStartTime = Date.now();
+
+          // Toggle body class for styling
+          if (levelNum === 3) {
+            document.body.classList.add('level-3-active');
+          } else {
+            document.body.classList.remove('level-3-active');
+          }
+
+          // Hide all screens and containers
+          Object.values(this.screens).forEach((s) => (s.style.display = 'none'));
+          Object.values(this.containers).forEach(
+            (c) => (c.style.display = 'none')
+          );
+
+          // Show HUD
+          this.hud.main.style.display = 'flex';
+
+          // Show/Hide Moves Counter
+          if (levelNum === 3) {
+            this.hud.moves.parentElement.style.visibility = 'hidden';
+          } else {
+            this.hud.moves.parentElement.style.visibility = 'visible';
+          }
+
+          this.updateHud();
+          this.updateStatus(`Level ${levelNum} Started`);
+
+          // Start specific level
+          if (levelNum === 1) {
+            this.containers.l12.style.display = 'flex';
+            Level1_2.init(0); // 0 is the index for Level 1
+          } else if (levelNum === 2) {
+            this.containers.l12.style.display = 'flex';
+            Level1_2.init(1); // 1 is the index for Level 2
+          } else if (levelNum === 3) {
+            this.containers.l3.style.display = 'flex';
+            Level3.init();
+          }
+
+          this.startTimer();
+        },
+
+        startTimer() {
+          clearInterval(this.levelTimer);
+          this.levelTimer = setInterval(() => {
+            if (this.gameFailed) return;
+
+            this.levelSeconds--;
+
+            // Update time display
+            const minutes = String(Math.floor(this.levelSeconds / 60)).padStart(
+              2,
+              '0'
+            );
+            const seconds = String(this.levelSeconds % 60).padStart(2, '0');
+            this.hud.time.textContent = `${minutes}:${seconds}`;
+
+            // Time Penalty threshold: 2 minutes for Levels 1-2, 3 minutes for Level 3
+            const penaltyThreshold = this.currentLevel === 3 ? 180 : this.TIME_PENALTY_THRESHOLD;
+            if (
+              this.levelSeconds <= penaltyThreshold &&
+              this.levelSeconds > 0
+            ) {
+              if (this.levelSeconds % 10 === 0) {
+                // Apply penalty every 10 seconds for all levels
+                this.updateScore(this.PENALTY_TIME, 'Time Penalty');
+              }
+            }
+
+            // Time Up
+            if (this.levelSeconds <= 0) {
+              this.failLevel('Time is up!');
+            }
+          }, 1000);
+        },
+
+        stopTimer() {
+          clearInterval(this.levelTimer);
+        },
+
+        updateScore(points, reason) {
+          if (this.gameFailed) return; // Stop if already failed
+
+          this.totalScore += points;
+          const scoreThisLevel = this.totalScore - this.levelStartScore;
+
+          this.hud.score.textContent = this.totalScore;
+          this.updateStatus(reason);
+
+          // *** NEW Real-time Disqualification Check (<= 35) ***
+          if (scoreThisLevel <= this.MIN_SCORE_TO_PASS && !this.gameFailed) {
+            this.gameFailed = true; // Set flag immediately
+            this.stopTimer();
+            alert(
+              `Disqualified: Your score for this level hit ${this.MIN_SCORE_TO_PASS} or below!`
+            );
+            this.disqualify(this.currentLevel, 'score too low', scoreThisLevel);
+          }
+        },
+
+        updateMoves() {
+          // Do not count moves for level 3
+          if (this.currentLevel === 3) return;
+
+          this.levelMoves++;
+          this.hud.moves.textContent = this.levelMoves;
+
+          // Move Penalty Logic
+          let penaltyApplied = false;
+          if (this.currentLevel === 1 && this.levelMoves > this.MOVE_LIMIT_L1) {
+            this.updateScore(this.PENALTY_MOVE, 'Extra Move');
+            penaltyApplied = true;
+          } else if (
+            this.currentLevel === 2 &&
+            this.levelMoves > this.MOVE_LIMIT_L2
+          ) {
+            this.updateScore(this.PENALTY_MOVE, 'Extra Move');
+            penaltyApplied = true;
+          }
+
+          if (!penaltyApplied && this.lastStatus !== 'Wrong Answer') {
+            this.updateStatus('Move made');
+          }
+        },
+
+        updateStatus(message) {
+          this.lastStatus = message;
+          this.hud.status.textContent = message;
+        },
+
+        updateHud() {
+          this.hud.level.textContent = this.currentLevel;
+          this.hud.score.textContent = this.totalScore;
+          this.hud.moves.textContent = this.levelMoves;
+          const minutes = String(Math.floor(this.levelSeconds / 60)).padStart(
+            2,
+            '0'
+          );
+          const seconds = String(this.levelSeconds % 60).padStart(2, '0');
+          this.hud.time.textContent = `${minutes}:${seconds}`;
+        },
+
+        failLevel(reason) {
+          // This is for time-up
+          if (this.gameFailed) return;
+          this.gameFailed = true;
+          this.stopTimer();
+          alert('Time up! You have been disqualified.');
+          this.disqualify(this.currentLevel, 'ran out of time');
+        },
+
+        completeLevel() {
+          if (this.gameFailed) return; // Stop if failed during the level
+          this.stopTimer();
+
+          // Calculate time taken for this level
+          const timeTakenMs = Date.now() - this.levelStartTime;
+          const timeTakenSec = Math.floor(timeTakenMs / 1000);
+          this.levelTimes.push(timeTakenSec);
+          this.lastLevelTime = timeTakenSec;
+
+          // Final check on level complete (redundant, but safe)
+          const scoreThisLevel = this.totalScore - this.levelStartScore;
+          if (scoreThisLevel <= this.MIN_SCORE_TO_PASS) {
+             this.disqualify(this.currentLevel, 'score too low', scoreThisLevel);
+             return;
+          }
+
+          // If passed, proceed
+          this.updateStatus(`Level ${this.currentLevel} Complete!`);
+          this.showNextStartScreen();
+        },
+
+        disqualify(levelNum, reasonCode, scoreThisLevel) {
+          this.gameFailed = true;
+          this.stopTimer();
+
+          document.body.classList.remove('level-3-active');
+
+          // Hide all containers & HUD
+          Object.values(this.containers).forEach(
+            (c) => (c.style.display = 'none')
+          );
+          this.hud.main.style.display = 'none';
+
+          // Show final screen with failure message
+          this.msgs.finalTitle.textContent = 'Disqualified!';
+          this.msgs.finalTitle.classList.add('disqualified-title');
+
+          let reason = '';
+          if (reasonCode === 'ran out of time') {
+            reason = `You ran out of time in Level ${levelNum}.`;
+          } else if (reasonCode === 'score too low') {
+            // *** MODIFIED ***
+            reason = `You only scored ${
+              scoreThisLevel !== undefined ? scoreThisLevel : 'N/A'
+            } points in Level ${levelNum} (score must be *above* 35).`;
+          }
+          this.msgs.finalMessage.textContent = `${reason} Better luck next time!`;
+          this.msgs.finalScore.textContent = this.totalScore;
+          this.screens.final.style.display = 'flex';
+        },
+
+        showNextStartScreen() {
+          // Hide all containers & HUD
+          Object.values(this.containers).forEach(
+            (c) => (c.style.display = 'none')
+          );
+          this.hud.main.style.display = 'none';
+
+          document.body.classList.remove('level-3-active');
+          this.msgs.finalTitle.classList.remove('disqualified-title'); // Ensure reset
+
+          if (this.currentLevel === 1) {
+            this.msgs.l1Complete.textContent = `Level 1 Complete! Total Score: ${this.totalScore}`;
+            this.screens.start2.style.display = 'flex';
+          } else if (this.currentLevel === 2) {
+            this.msgs.l2Complete.textContent = `Level 2 Complete! Total Score: ${this.totalScore}`;
+            this.screens.start3.style.display = 'flex';
+          } else if (this.currentLevel === 3) {
+            this.msgs.finalTitle.textContent = 'All Levels Complete!';
+            this.msgs.finalMessage.textContent =
+              "Congratulations! You've debugged, rearranged, and restored all the systems. The Tech Treasure Hunt is a success!";
+            this.msgs.finalScore.textContent = this.totalScore;
+            // Display level times
+            const timesText = this.levelTimes.map((time, idx) => `Level ${idx + 1}: ${time}s`).join(', ');
+            document.getElementById('level-times').textContent = `Time taken: ${timesText}`;
+            this.screens.final.style.display = 'flex';
+          }
+        },
+      };
+
+      /*
+      ======================================================================
+      === █   █ █▀▀ █   █ █▀▀ █     █▀▀ █▀█ █▀▀ ===
+      === █▄▄ █ █▀▀ █   █ █▀▀ █     █   █ █ █▀▀ ===
+      === █ █ █ ▀▀▀ ▀▄▄ ▀ ▀▀▀ ▀▀▀   ▀▀▀ ▀ ▀ ▀▀▀ ===
+      ======================================================================
+      */
+
+      const Level1_2 = {
+        // Config - FULL PUZZLE SET
+        LEVELS: [
+          {
+            id: 1,
+            mode: 'rearrange',
+            puzzles: [
+              {
+                title: 'Greeting 1',
+                lines: [
+                  '// Greeting from Builder',
+                  'function greet(){',
+                  '  console.log("Hello Chief!");',
+                  '}',
+                  'greet();',
+                ],
+                speech: 'Access granted — village online!',
+              },
+              {
+                title: 'Greeting 2',
+                lines: [
+                  '// Another warm message',
+                  'function cheer(){',
+                  '  console.log("We missed you!");',
+                  '}',
+                  'cheer();',
+                ],
+                speech: 'System handshake complete!',
+              },
+              {
+                title: 'Greeting 3',
+                lines: [
+                  '// Celebration message',
+                  "let joy = 'Hooray!';",
+                  'console.log(joy);',
+                ],
+                speech: 'Protocol executed successfully!',
+              },
+            ],
+          },
+          {
+            id: 2,
+            mode: 'mcq',
+            puzzles: [
+              {
+                title: 'Forge Fix 1',
+                buggyLines: [
+                  '// Simple gold calculation',
+                  'let gold = 200 * ;',
+                  'console.log(gold)',
+                ],
+                choices: [
+                  ['// Simple gold calculation', '// Simple gold calc'],
+                  [
+                    'let gold = 200 * 2;',
+                    'let gold = 200 * ;',
+                    'let gold = * 2 200;',
+                  ],
+                  [
+                    'console.log(gold);',
+                    'console.log(gold)',
+                    'console.log(gold;;)',
+                  ],
+                ],
+                correctLines: [
+                  '// Simple gold calculation',
+                  'let gold = 200 * 2;',
+                  'console.log(gold);',
+                ],
+                speech: '💾 Code compiled with golden efficiency!',
+              },
+              {
+                title: 'Forge Fix 2',
+                buggyLines: [
+                  '// Function version',
+                  'function forge(x){',
+                  ' return x * 150',
+                  '}',
+                  'console.log(forge(3))',
+                ],
+                choices: [
+                  ['// Function version', '// Function vers'],
+                  [
+                    'function forge(x){',
+                    'function forge x {',
+                    'funct forge(x){',
+                  ],
+                  [
+                    '  return x * 150;',
+                    ' return x * 150',
+                    '  retrn x * 150;',
+                  ],
+                  ['}', '};', 'end'],
+                  [
+                    'console.log(forge(3));',
+                    'console.log(forge(3))',
+                    'console.log(for ge(3));',
+                  ],
+                ],
+                correctLines: [
+                  '// Function version',
+                  'function forge(x){',
+                  '  return x * 150;',
+                  '}',
+                  'console.log(forge(3));',
+                ],
+                speech: '✅ Data smelted flawlessly.',
+              },
+              {
+                title: 'Forge Fix 3',
+                buggyLines: [
+                  '// Upgrade bonus',
+                  'let bonus = 50',
+                  "console.log('Gold bonus:', bonus)",
+                ],
+                choices: [
+                  ['// Upgrade bonus', '// Upgrd bonus', '// Bonus up'],
+                  ['let bonus = 50;', 'let bonus = fifty;', 'let bonus = 50'],
+                  [
+                    "console.log('Gold bonus:', bonus);",
+                    "console.log('Gold bonus:' bonus);",
+                    "console.log('Gold bonus:', bonus)",
+                  ],
+                ],
+                correctLines: [
+                  '// Upgrade bonus',
+                  'let bonus = 50;',
+                  "console.log('Gold bonus:', bonus);",
+                ],
+                speech: '💰 Encryption complete — reward granted.',
+              },
+            ],
+          },
+        ],
+
+        // DOM Elements
+        linesEl: document.getElementById('l12-lines'),
+        shuffleBtn: document.getElementById('l12-shuffleBtn'),
+        checkBtn: document.getElementById('l12-checkBtn'),
+        statusEl: document.getElementById('l12-status'),
+        subtitle: document.getElementById('l12-subtitle'),
+        cinema: document.getElementById('l12-cinema'),
+        speechText: document.getElementById('l12-speechText'),
+        actionPrimary: document.getElementById('l12-actionPrimary'),
+        actionSecondary: document.getElementById('l12-actionSecondary'),
+
+        // State
+        current: [],
+        currentSelections: [],
+        levelIndex: 0,
+        subIndex: 0,
+
+        init(levelIdx) {
+          this.levelIndex = levelIdx;
+          this.subIndex = 0;
+          this.loadPuzzle(this.levelIndex, this.subIndex);
+
+          this.shuffleBtn.onclick = () => {
+            this.loadPuzzle(this.levelIndex, this.subIndex);
+            GameManager.updateMoves(); // Shuffling counts as a move
+          };
+          this.checkBtn.onclick = () => this.checkAnswer();
+        },
+
+        shuffle(a) {
+          const b = a.slice();
+          for (let i = b.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [b[i], b[j]] = [b[j], b[i]];
+          }
+          return b;
+        },
+
+        renderLines() {
+          this.linesEl.innerHTML = '';
+          const mode = this.LEVELS[this.levelIndex].mode;
+          if (mode === 'rearrange') {
+            this.current.forEach((txt, i) => {
+              const li = document.createElement('li');
+              li.className = 'line';
+              li.draggable = true;
+              li.textContent = txt;
+              li.dataset.index = i;
+              li.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', String(i));
+                li.classList.add('dragging');
+              });
+              li.addEventListener('dragend', () =>
+                li.classList.remove('dragging')
+              );
+              li.addEventListener('dragover', (e) => e.preventDefault());
+              li.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const from = Number(e.dataTransfer.getData('text/plain'));
+                const to = Number(li.dataset.index);
+                if (from === to) return;
+                const item = this.current.splice(from, 1)[0];
+                this.current.splice(to, 0, item);
+                GameManager.updateMoves();
+                this.renderLines();
+              });
+              this.linesEl.appendChild(li);
+            });
+          } else if (mode === 'mcq') {
+            const puzzle = this.LEVELS[this.levelIndex].puzzles[this.subIndex];
+            puzzle.buggyLines.forEach((bug, i) => {
+              const li = document.createElement('li');
+              li.className = 'line';
+              li.dataset.index = i;
+              const bugSpan = document.createElement('span');
+              bugSpan.className = 'bug-text';
+              bugSpan.textContent = bug;
+              const select = document.createElement('select');
+              select.className = 'fix-select';
+
+              // *** MODIFICATION: SHUFFLE OPTIONS ***
+              const opts = puzzle.choices[i] || [puzzle.correctLines[i]];
+              const shuffledOpts = this.shuffle(opts); // Shuffle the options
+              shuffledOpts.forEach((o) => {
+                const option = document.createElement('option');
+                option.value = o;
+                option.textContent = o;
+                select.appendChild(option);
+              });
+
+              // Set current selection to the buggy line
+              if (this.currentSelections[i])
+                select.value = this.currentSelections[i];
+
+              select.addEventListener('change', (e) => {
+                this.currentSelections[i] = e.target.value;
+                GameManager.updateMoves();
+              });
+              li.appendChild(bugSpan);
+              li.appendChild(select);
+              this.linesEl.appendChild(li);
+            });
+          }
+        },
+
+        loadPuzzle(i, j = 0) {
+          this.levelIndex = i;
+          this.subIndex = j;
+          const levelObj = this.LEVELS[i];
+          const L = levelObj.puzzles[j];
+          this.subtitle.textContent = `Level ${levelObj.id} — Puzzle ${j + 1} / ${
+            levelObj.puzzles.length
+          }`;
+          this.statusEl.textContent = '';
+          this.currentSelections = [];
+
+          if (levelObj.mode === 'rearrange') {
+            this.current = this.shuffle(L.lines);
+          } else if (levelObj.mode === 'mcq') {
+            this.current = (L.buggyLines || []).slice();
+            // *** MODIFICATION: SET DEFAULT TO BUGGY LINE ***
+            this.currentSelections = (L.buggyLines || []).slice();
+          } else {
+            this.current = [];
+          }
+          this.renderLines();
+        },
+
+        checkAnswer() {
+          const levelObj = this.LEVELS[this.levelIndex];
+          const L = levelObj.puzzles[this.subIndex];
+          let ok = false;
+
+          if (levelObj.mode === 'rearrange') {
+            ok = this.current.every((v, i) => v === L.lines[i]);
+          } else if (levelObj.mode === 'mcq') {
+            // Check the currently selected values against the correct lines
+            const chosen = this.currentSelections.map((c, idx) => {
+              // This logic handles if user doesn't touch a dropdown
+              if (typeof c === 'string' && c.length) return c;
+              return L.buggyLines[idx] || ''; // fallback to the buggy line
+            });
+
+            ok =
+              chosen.length === L.correctLines.length &&
+              chosen.every((v, i) => v === L.correctLines[i]);
+          }
+
+          if (ok) {
+            this.statusEl.textContent = '✅ ACCESS GRANTED';
+            GameManager.updateStatus('Correct!');
+            setTimeout(() => this.showPopup(L.speech), 400);
+          } else {
+            this.statusEl.textContent = '❌ SYNTAX BREACH DETECTED';
+            GameManager.updateScore(GameManager.PENALTY_WRONG, 'Wrong Answer');
+          }
+        },
+
+        showPopup(text) {
+          this.speechText.textContent = text;
+          this.cinema.classList.add('show');
+          this.actionPrimary.textContent = '[ NEXT ]';
+
+          this.actionPrimary.onclick = () => {
+            this.cinema.classList.remove('show');
+            // Advance to next puzzle
+            if (
+              this.subIndex <
+              this.LEVELS[this.levelIndex].puzzles.length - 1
+            ) {
+              this.loadPuzzle(this.levelIndex, this.subIndex + 1);
+            } else {
+              // --- LEVEL COMPLETE ---
+              GameManager.completeLevel();
+            }
+          };
+          this.actionSecondary.onclick = () =>
+            this.cinema.classList.remove('show');
+        },
+      };
+
+      /*
+      ======================================================================
+      === █   █ █▀▀ █   █ █▀▀ ▀     █▀▀ █▀█ █▀▀ ===
+      === █▄▄ █ █▀▀ █   █ █▀▀ █     ▀▀█ █ █ █▀▀ ===
+      === █ █ █ ▀▀▀ ▀▄▄ ▀ ▀▀▀ ▀▀▀   ▀▀▀ ▀ ▀ ▀▀▀ ===
+      ======================================================================
+      */
+
+      // Using the user's provided code for Level 3, wrapped in our object
+      const Level3 = {
+        // --- 1. Define IoT Topics and Solutions (15 total for 6x5 grid) ---
+        allTopics: [
+          {
+            topic: 'Sensor',
+            solution:
+              "A device that detects and responds to some type of input from the physical environment (e.g., light, temperature, motion). It's the 'eyes and ears' of IoT.",
+          },
+          {
+            topic: 'Actuator',
+            solution:
+              "A component responsible for moving or controlling a mechanism, like a motor, switch, or valve. It's the 'hands and feet' that act on commands.",
+          },
+          {
+            topic: 'Gateway',
+            solution:
+              'A critical bridge that connects IoT devices (often with limited connectivity) to the internet/cloud, typically performing data aggregation and protocol translation.',
+          },
+          {
+            topic: 'Cloud',
+            solution:
+              'A vast network of remote servers used to store, manage, and process the immense amounts of data collected from countless IoT devices.',
+          },
+          {
+            topic: 'MQTT',
+            solution:
+              'Message Queuing Telemetry Transport: A lightweight messaging protocol ideal for low-bandwidth, high-latency networks, making it perfect for efficient IoT communication.',
+          },
+          {
+            topic: 'Smart Home',
+            solution:
+              'A residence equipped with devices that can be automatically controlled remotely, from lighting and climate to security and entertainment.',
+          },
+          {
+            topic: 'Arduino',
+            solution:
+              'An open-source electronics platform based on easy-to-use hardware and software, widely popular for rapid prototyping and DIY IoT projects.',
+          },
+          {
+            topic: 'Raspberry Pi',
+            solution:
+              'A series of small, affordable single-board computers (SBCs) used for IoT projects that require more processing power and operating system capabilities.',
+          },
+          {
+            topic: 'Big Data',
+            solution:
+              'The massive volume of diverse data generated by IoT devices that requires advanced analytical techniques to reveal hidden patterns, trends, and associations.',
+          },
+          {
+            topic: 'Firmware',
+            solution:
+              "Permanent software programmed directly into a device's hardware (often in non-volatile memory) that provides low-level control for the specific hardware.",
+          },
+          {
+            topic: 'API',
+            solution:
+              'Application Programming Interface: A set of defined rules and protocols that allows different software applications or systems to communicate and interact with each other.',
+          },
+          {
+            topic: 'Ethernet',
+            solution:
+              'A traditional wired network technology used to connect devices in a local area network (LAN), offering reliable, high-speed, and low-latency communication.',
+          },
+          {
+            topic: 'Wi-Fi',
+            solution:
+              'A popular wireless networking technology that uses radio waves to allow devices to connect to the internet or communicate with each other over short distances.',
+          },
+          {
+            topic: 'Bluetooth',
+            solution:
+              'A short-range wireless technology used for exchanging data between fixed and mobile devices, commonly found in wearables, headphones, and small IoT sensors.',
+          },
+          {
+            topic: '5G',
+            solution:
+              'The fifth generation of cellular network technology, promising significantly higher speeds, ultra-low latency, and massive device connectivity, crucial for advanced IoT applications.',
+          },
+        ],
+        iotData: [],
+
+        // --- 2. Game Variables ---
+        gameBoard: null,
+        solutionBox: null,
+        solutionTopic: null,
+        solutionText: null,
+        resetButton: null,
+
+        cardPairs: [],
+        firstCard: null,
+        secondCard: null,
+        lockBoard: false,
+        matchedPairs: 0,
+
+        // --- 3. Game Functions ---
+
+        // Initializer for the GameManager
+        init: function () {
+          // Get the 15 topics
+          this.iotData = this.allTopics.slice(0, 15);
+          this.cardPairs = [...this.iotData, ...this.iotData];
+
+          // Setup DOM references
+          this.gameBoard = document.getElementById('game-board');
+          this.solutionBox = document.getElementById('solution-box');
+          this.solutionTopic = document.getElementById('solution-topic');
+          this.solutionText = document.getElementById('solution-text');
+          this.resetButton = document.getElementById('reset-btn');
+
+          // The user's code had this, we don't need it for the game flow
+          // this.resetButton.addEventListener('click', () => this.createBoard());
+
+          this.createBoard(); // Initialize game on load
+        },
+
+        // Fisher-Yates Shuffle Algorithm
+        shuffle: function (array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        },
+
+        // Create and display the game board
+        createBoard: function () {
+          // Reset state
+          this.gameBoard.innerHTML = '';
+          this.solutionBox.classList.remove('visible');
+          this.matchedPairs = 0;
+          this.firstCard = null;
+          this.secondCard = null;
+          this.lockBoard = false;
+
+          // Shuffle and create cards
+          this.shuffle(this.cardPairs);
+
+          this.cardPairs.forEach((item) => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.dataset.topic = item.topic; // Store topic data
+
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front"></div>
+                    <div class="card-back">${item.topic}</div>
+                </div>
+            `;
+
+            // Modified to pass 'card' and use 'this' for the Level3 object
+            card.addEventListener('click', () => this.flipCard(card));
+            this.gameBoard.appendChild(card);
+          });
+        },
+
+        // Handle card click (modified to accept 'card' element)
+        flipCard: function (card) {
+          if (this.lockBoard) return; // Board is locked
+          if (card === this.firstCard) return; // Clicked the same card twice
+          if (card.classList.contains('matched')) return; // Clicked a matched card
+
+          card.classList.add('flipped');
+          // NO move counter for Level 3, per user request.
+
+          if (!this.firstCard) {
+            // This is the first card
+            this.firstCard = card;
+            return;
+          }
+
+          // This is the second card
+          this.secondCard = card;
+          this.lockBoard = true; // Lock the board
+
+          this.checkForMatch();
+        },
+
+        // Check if the two flipped cards match
+        checkForMatch: function () {
+          const isMatch =
+            this.firstCard.dataset.topic === this.secondCard.dataset.topic;
+
+          if (isMatch) {
+            this.disableCards();
+          } else {
+            this.unflipCards();
+          }
+        },
+
+        // If cards are a match (MODIFIED for GameManager)
+        disableCards: function () {
+          this.firstCard.classList.add('matched');
+          this.secondCard.classList.add('matched');
+
+          // Show solution
+          this.showSolution(this.firstCard.dataset.topic);
+
+          // *** INTEGRATION *** - No points awarded for matches in Level 3
+          if (GameManager.currentLevel !== 3) {
+            GameManager.updateScore(GameManager.REWARD_MATCH, 'Match Found!');
+          }
+
+          this.matchedPairs++;
+          this.resetBoard();
+
+          // Check for win (MODIFIED for GameManager)
+          if (this.matchedPairs === this.iotData.length) {
+            setTimeout(() => {
+              // alert('Congratulations, Pathfinder! All tech treasures unlocked!'); // Original
+              GameManager.completeLevel(); // *** INTEGRATION ***
+            }, 1000);
+          }
+        },
+
+        // If cards are not a match (MODIFIED for GameManager)
+        unflipCards: function () {
+          // No penalty for wrong moves in Level 3
+          if (GameManager.currentLevel !== 3) {
+            GameManager.updateScore(GameManager.PENALTY_WRONG, 'No Match');
+          }
+
+          setTimeout(() => {
+            this.firstCard.classList.remove('flipped');
+            this.secondCard.classList.remove('flipped');
+            this.resetBoard();
+          }, 1000); // Wait 1 second before flipping back
+        },
+
+        // Reset card variables and unlock board
+        resetBoard: function () {          [this.firstCard, this.secondCard] = [null, null];
+          this.lockBoard = false;
+        },
+
+        // Show the solution in the solution box
+        showSolution: function (topic) {
+          const item = this.iotData.find((d) => d.topic === topic);
+          if (item) {
+            this.solutionTopic.textContent = item.topic;
+            this.solutionText.textContent = item.solution;
+            this.solutionBox.classList.add('visible');
+          }
+        },
+      };
+
+      // --- INITIALIZE THE GAME MANAGER ---
+      GameManager.init();
+    </script>
+  </body>
+</html>
